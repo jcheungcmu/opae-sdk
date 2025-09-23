@@ -2074,6 +2074,7 @@ fpga_result opae_glob_path(char *path, size_t len)
 	size_t glob_len;
 	if (!globres) {
 		if (pglob.gl_pathc > 1) {
+		//	printf("FOUND MORE THAN ONE OPAE GLOB PATH %s\n", path);
 			OPAE_MSG("Ambiguous object key - using first one");
 		}
 		glob_len = strnlen(pglob.gl_pathv[0], len-1);

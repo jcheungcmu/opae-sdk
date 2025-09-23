@@ -67,6 +67,7 @@ fpga_result __XFPGA_API__ xfpga_fpgaGetProperties(fpga_token token,
 	struct _fpga_properties *_prop = NULL;
 	fpga_result result = FPGA_OK;
 
+	//printf("xfpga_fpgaGetProperties\n");
 	ASSERT_NOT_NULL(prop);
 
 	result = fpgaGetProperties(NULL, (fpga_properties *)&_prop);

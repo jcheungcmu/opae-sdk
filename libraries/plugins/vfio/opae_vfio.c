@@ -946,6 +946,7 @@ fpga_result __VFIO_API__ vfio_fpgaGetProperties(fpga_token token, fpga_propertie
 	fpga_result result = FPGA_OK;
 	int err;
 
+	//printf("vfio_fpgaGetProperties\n");
 	ASSERT_NOT_NULL(prop);
 
 	result = fpgaGetProperties(NULL, (fpga_properties *)&_prop);

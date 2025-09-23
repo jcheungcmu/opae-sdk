@@ -407,25 +407,39 @@ opae_get_parent_token(opae_wrapped_token *child)
 	opae_wrapped_token *parent = NULL;
 	fpga_token_header *child_hdr;
 	fpga_token_header *parent_hdr;
+	int count = 0;
 
 	child_hdr = (fpga_token_header *)child->opae_token;
 
 	if (opae_mutex_lock(mres, &token_list_lock))
 		return NULL;
 
+	//printf("OPAE_GET_PARENT_TOKEN\n");
 	for (p = token_list_head.next ;
 		p != &token_list_head ;
 		    p = p->next) {
-
+		
 		parent_hdr = (fpga_token_header *)p->opae_token;
 
 		if (fpga_is_parent_child(parent_hdr, child_hdr)) {
+			
+			//printf("FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
 			parent = p;
 			opae_upref_wrapped_token(parent);
+			
+			if (child_hdr->function == 1 || child_hdr->object_id == 247463936) {
+				if (count == 1) {
+					break;
+				}
+				else {
+					count++;
+					continue;
+				}
+			}
 			break;
 		}
 	}
-
+	//printf("DONE LOOP\n");
 	opae_mutex_unlock(mres, &token_list_lock);
 
 	return parent;

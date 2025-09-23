@@ -312,6 +312,7 @@ STATIC struct dev_list *add_dev(const char *sysfspath, const char *devpath,
 
 	pdev->parent = parent;
 
+	//printf("ADD_DEV pdev sysfspath %s devpath %s parent %s parent devpath %s\n", pdev->sysfspath, pdev->devpath, pdev->parent->sysfspath, pdev->parent->devpath);
 	return pdev;
 }
 
@@ -448,10 +449,14 @@ STATIC fpga_result sync_afu(struct dev_list *afu)
 	afu->accelerator_num_mmios = 0;
 	afu->accelerator_num_irqs = 0;
 
-	res = opae_open(afu->devpath, O_RDWR);
+	//printf("SYNC_AFU OPAE_OPEN RESETTING\n");
+	//res = opae_open(afu->devpath, O_RDWR);
+	res = 0;
 	if (-1 == res) {
+		//printf("FPGA ACCELERATOR ASSIGNED\n");
 		afu->accelerator_state = FPGA_ACCELERATOR_ASSIGNED;
 	} else {
+		//printf("FPGA ACCELERATOR UNASSIGNED\n");
 		opae_port_info info = { 0, 0, 0, 0, 0 };
 
 		if (opae_get_port_info(res, &info) == FPGA_OK) {
@@ -460,7 +465,7 @@ STATIC fpga_result sync_afu(struct dev_list *afu)
 				afu->accelerator_num_irqs = info.num_uafu_irqs;
 		}
 
-		opae_close(res);
+		//opae_close(res);
 
 		afu->accelerator_state = FPGA_ACCELERATOR_UNASSIGNED;
 	}
@@ -503,6 +508,7 @@ STATIC fpga_result enum_afu(const char *sysfspath, const char *name,
 		return FPGA_EXCEPTION;
 	}
 
+	// printf("ENUM_AFU sysfspath %s name %s devpath %s parent_sysfspath %s\n", sysfspath, name, devpath, parent->sysfspath);
 	pdev = add_dev(sysfspath, devpath, parent);
 	if (!pdev) {
 		OPAE_ERR("Failed to allocate device");
@@ -713,6 +719,7 @@ fpga_result __XFPGA_API__ xfpga_fpgaEnumerate(const fpga_properties *filters,
 	struct dev_list head;
 	struct dev_list *lptr;
 
+	//printf("ENTERED xfpga_fpgaEnumerate\n");
 	if (NULL == num_matches) {
 		OPAE_MSG("num_matches is NULL");
 		return FPGA_INVALID_PARAM;

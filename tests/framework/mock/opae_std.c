@@ -31,6 +31,7 @@
 
 int opae_open(const char *path, int flags)
 {
+	//printf("TESTS/FRAMEWORK/MOCK/OPAE_STD.C/OPAE_OPEN: %s\n", path);
 	return open(path, flags);
 }
 

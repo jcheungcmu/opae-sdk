@@ -337,6 +337,7 @@ fpga_result intel_fme_port_pr(int fd, uint32_t flags, uint32_t port_id,
 					   .buffer_size = sz,
 					   .buffer_address = addr};
 	int res = FPGA_OK;
+	printf("INTEL_FME_PORT_PR\n");
 	if (flags) {
 		OPAE_MSG("flags currently not supported in FPGA_FME_PORT_PR");
 	}
@@ -348,6 +349,7 @@ fpga_result intel_fme_port_pr(int fd, uint32_t flags, uint32_t port_id,
 
 fpga_result intel_fme_port_reset(int fd)
 {
+	printf("INTEL_FME_PORT_RESET\n");
 	return opae_internal_ioctl(fd, FPGA_PORT_RESET, NULL);
 }
 
@@ -435,6 +437,7 @@ fpga_result dfl_fme_port_pr(int fd, uint32_t flags, uint32_t port_id,
 					       .buffer_size = sz,
 					       .buffer_address = addr};
 	int res = FPGA_OK;
+	printf("DFL_FME_PORT_PR\n");
 	if (flags) {
 		OPAE_MSG("flags currently not supported in FPGA_FME_PORT_PR");
 	}
@@ -446,6 +449,7 @@ fpga_result dfl_fme_port_pr(int fd, uint32_t flags, uint32_t port_id,
 
 fpga_result dfl_fme_port_reset(int fd)
 {
+	//printf("DFL_FME_PORT_RESET\n");
 	return opae_internal_ioctl(fd, DFL_FPGA_PORT_RESET, NULL);
 }
 
@@ -673,6 +677,8 @@ fpga_result opae_fme_port_release(int fd, uint32_t flags, uint32_t port_id)
 fpga_result opae_fme_port_pr(int fd, uint32_t flags, uint32_t port_id,
 			     uint32_t sz, uint64_t addr, uint64_t *status)
 {
+	printf("%d %d port_id=%d %d %ld %ld\n", fd, flags, port_id, sz, addr, *status);
+        //return 0;	
 	IOCTL(fme_port_pr, fd, flags, port_id, sz, addr, status);
 }
 

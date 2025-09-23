@@ -126,6 +126,7 @@ STATIC fpga_result open_accel(fpga_handle handle, fpga_token *token, fpga_handle
 	fpga_properties props;
 	uint32_t matches = 0;
 
+	printf("ENTER OPEN ACCEL\n");
 	if (_handle == NULL) {
 		OPAE_ERR("Invalid handle");
 		return FPGA_INVALID_PARAM;
@@ -149,7 +150,18 @@ STATIC fpga_result open_accel(fpga_handle handle, fpga_token *token, fpga_handle
 	// TODO: Use slot number as part of filter
 	//       We only want to query for accelerators for the
 	//       slot being reconfigured
+
+	printf("RECONF ENUMERATION\n");
 	result = xfpga_fpgaEnumerate(&props, 1, token, 1, &matches);
+
+	// fpga_token *jason_tokens = NULL;
+	// jason_tokens = (fpga_token *)calloc(2, sizeof(fpga_token));
+	// result = xfpga_fpgaEnumerate(&props, 1, jason_tokens, 2, &matches);
+
+	// *token = jason_tokens[1];
+
+
+
 	if (result != FPGA_OK) {
 		OPAE_ERR("Error enumerating for accelerator to reconfigure");
 		goto free_props;
@@ -192,6 +204,8 @@ STATIC fpga_result clear_port_errors(fpga_handle handle)
 		return result;
 	}
 
+	printf("Port error path %s\n", sysfs_path);
+
 	// Read port error.
 	result = sysfs_read_u64(sysfs_path, &error);
 	if (result != FPGA_OK) {
@@ -204,13 +218,14 @@ STATIC fpga_result clear_port_errors(fpga_handle handle)
 		OPAE_ERR("Failed to get port errors clear path");
 		return result;
 	}
-
+	/*
 	// Clear port error.
 	result = sysfs_write_u64(sysfs_path, error);
 	if (result != FPGA_OK) {
 		OPAE_ERR("Failed to clear port errors");
 		return result;
 	}
+	*/
 
 	return result;
 }
@@ -226,13 +241,15 @@ fpga_result set_afu_userclock(fpga_handle handle,
 	uint64_t userclk_low              = 0;
 
 	// Read port sysfs path
+	printf("READ PORTSYSFS PATH\n");
 	result = get_port_sysfs(handle, sysfs_path);
 	if (result != FPGA_OK) {
 		OPAE_ERR("Failed to get port syfs path");
 		return result;
 	}
-
+	printf("setting afu user clk: %s high %lu low %lu\n", sysfs_path, usrlclock_high, usrlclock_low);
 	// set user clock
+	printf("SET USERCLK\n");
 	result = set_userclock(sysfs_path, usrlclock_high, usrlclock_low);
 	if (result != FPGA_OK) {
 		OPAE_ERR("Failed to set user clock");
@@ -240,6 +257,7 @@ fpga_result set_afu_userclock(fpga_handle handle,
 	}
 
 	// read user clock
+	printf("READ USERCLK\n");
 	result = get_userclock(sysfs_path, &userclk_high, &userclk_low);
 	if (result != FPGA_OK) {
 		OPAE_ERR("Failed to get user clock");
@@ -264,6 +282,8 @@ fpga_result __XFPGA_API__ xfpga_fpgaReconfigureSlot(fpga_handle fpga,
 	int err                         = 0;
 	fpga_token token		= NULL;
 	fpga_handle accel               = NULL;
+
+	printf("ENTERED xfpga_fpgaReconfigureSlot\n");
 
 	result = handle_check_and_lock(_handle);
 	if (result)
@@ -291,12 +311,24 @@ fpga_result __XFPGA_API__ xfpga_fpgaReconfigureSlot(fpga_handle fpga,
 			goto out_unlock;
 		}
 	}
+/*
+	struct _fpga_token *_token = (struct _fpga_token *)token;
+	struct _fpga_handle *_accel = (struct _fpga_handle *)accel;
 
+	struct _fpga_token *_accel_token = (struct _fpga_token *)_accel->token;
+	struct _fpga_token *_handle_token = (struct _fpga_token *)_handle->token;
+
+	printf("HANDLE TOKEN %s\nTOKEN %s\nACCEL TOKEN%s\n", _handle_token->sysfspath, _token->sysfspath, _accel_token->sysfspath);
+*/
 	// Clear port errors
+        //result = clear_port_errors(NULL);	
+	
 	result = clear_port_errors(fpga);
 	if (result != FPGA_OK) {
 		OPAE_ERR("Failed to clear port errors.");
 	}
+	
+	
 
 	if (get_bitstream_json_len(bitstream) > 0) {
 
@@ -308,32 +340,36 @@ fpga_result __XFPGA_API__ xfpga_fpgaReconfigureSlot(fpga_handle fpga,
 			goto out_unlock;
 		}
 
-		OPAE_DBG(" Version                  :%f\n", metadata.version);
-		OPAE_DBG(" Magic Num                :%ld\n",
+		printf(" Version                  :%f\n", metadata.version);
+		printf(" Magic Num                :%ld\n",
 			 metadata.afu_image.magic_num);
-		OPAE_DBG(" Interface Id             :%s\n",
+		printf(" Interface Id             :%s\n",
 			 metadata.afu_image.interface_uuid);
-		OPAE_DBG(" Clock_frequency_high     :%d\n",
+		printf(" Clock_frequency_high     :%d\n",
 			 metadata.afu_image.clock_frequency_high);
-		OPAE_DBG(" Clock_frequency_low      :%d\n",
+		printf(" Clock_frequency_low      :%d\n",
 			 metadata.afu_image.clock_frequency_low);
-		OPAE_DBG(" Power                    :%d\n",
+		printf(" Power                    :%d\n",
 			 metadata.afu_image.power);
-		OPAE_DBG(" Name                     :%s\n",
+		printf(" Name                     :%s\n",
 			 metadata.afu_image.afu_clusters.name);
-		OPAE_DBG(" Total_contexts           :%d\n",
+		printf(" Total_contexts           :%d\n",
 			 metadata.afu_image.afu_clusters.total_contexts);
-		OPAE_DBG(" AFU_uuid                 :%s\n",
+		printf(" AFU_uuid                 :%s\n",
 			 metadata.afu_image.afu_clusters.afu_uuid);
 
 
 		// Set AFU user clock
 		if (!(flags & FPGA_RECONF_SKIP_USRCLK)) {
+			printf("SETTING USER CLOCK\n");
 			if (metadata.afu_image.clock_frequency_high > 0 ||
-			    metadata.afu_image.clock_frequency_low > 0) {
+			    metadata.afu_image.clock_frequency_low > 0) 
+				{
+				printf("BEFORE SETTING CLK\n");
 				result = set_afu_userclock(fpga,
 						metadata.afu_image.clock_frequency_high,
 						metadata.afu_image.clock_frequency_low);
+				printf("AFTER SETTING CLK\n");
 				if (result != FPGA_OK) {
 					OPAE_ERR("Failed to set user clock");
 					goto out_unlock;

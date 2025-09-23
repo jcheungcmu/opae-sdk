@@ -443,35 +443,49 @@ fpga_result usrclk_set_freq(uint8_t *uio_ptr,
 	uint32_t cp2, lf, rc  = 0;
 	fpga_result res       = FPGA_OK;
 
+	printf("ENTER USRCLK_SET_FREQ\n");
 	if ((uio_ptr == NULL) ||
 		(seq == NULL)) {
+		printf("INVALID INPUTS\n");
 		OPAE_ERR("Invalid input parameters");
 		return FPGA_INVALID_PARAM;
 	}
 
+	printf("M_WRITE\n");
 	res = usrclk_m_write(uio_ptr, c->pll_m, seq);
 	if (res)
 		return res;
 
+	printf("N_WRITE\n");
 	res = usrclk_n_write(uio_ptr, c->pll_n, c->pll_cp, seq);
 	if (res)
 		return res;
 
+	printf("C0_WRITE\n");
 	res = usrclk_c0_write(uio_ptr, c->pll_c0, seq);
 	if (res)
 		return res;
 
+	printf("C1_WRITE\n");
 	res = usrclk_c1_write(uio_ptr, c->pll_c1, seq);
 	if (res)
 		return res;
 
+	printf("GET CP2\n");
 	cp2 = FIELD_GET(CFG_PLL_CP2, c->pll_cp) << PLL_CP2_SHIFT;
+
+	printf("WRITE CP2\n");
 	res = usrclk_write(uio_ptr, PLL_CP2_ADDR, cp2, (*seq)++);
 	if (res)
 		return res;
 
+	printf("GET LF\n");
 	lf = FIELD_GET(CFG_PLL_LF, c->pll_lf) << PLL_LF_SHIFT;
+	
+	printf("GET RC\n");
 	rc = FIELD_GET(CFG_PLL_RC, c->pll_rc) << PLL_RC_SHIFT;
+	
+	printf("WRITE LF\n");
 	return usrclk_write(uio_ptr, PLL_LF_ADDR, lf | rc, (*seq)++);
 }
 
@@ -512,6 +526,7 @@ fpga_result get_usrclk_uio(const char *sysfs_path,
 	uint64_t value                    = 0;
 	glob_t pglob;
 
+	printf("GET_USRCLK_UIO %s\n", sysfs_path);
 	if (sysfs_path == NULL) {
 		OPAE_ERR("Invalid input parameters");
 		return FPGA_INVALID_PARAM;
@@ -524,6 +539,8 @@ fpga_result get_usrclk_uio(const char *sysfs_path,
 		return FPGA_EXCEPTION;
 	}
 
+	printf("FEATURE_PATH %s\n", feature_path);
+
 	gres = opae_glob(feature_path, GLOB_NOSORT, NULL, &pglob);
 	if (gres) {
 		OPAE_ERR("Failed pattern match %s: %s",
@@ -532,6 +549,7 @@ fpga_result get_usrclk_uio(const char *sysfs_path,
 		return FPGA_INVALID_PARAM;
 	}
 
+	printf("pglob.gl_pathc: %ld\n", pglob.gl_pathc);
 	for (i = 0; i < pglob.gl_pathc; i++) {
 		res = sysfs_read_u64(pglob.gl_pathv[i], &value);
 		if (res != FPGA_OK) {
@@ -539,7 +557,9 @@ fpga_result get_usrclk_uio(const char *sysfs_path,
 			continue;
 		}
 
+		printf("VALUE %ld\n", value); 
 		if (value == feature_id) {
+			printf("VALUE EQUALS FEATURE_ID\n");
 			res = FPGA_OK;
 			char *p = strstr(pglob.gl_pathv[i], "dfl_dev");
 			if (p == NULL) {
@@ -554,8 +574,9 @@ fpga_result get_usrclk_uio(const char *sysfs_path,
 			}
 			memcpy(dfl_dev_str, p, end - p);
 			*(dfl_dev_str + (end - p)) = '\0';
-
+			printf("DFL_DEV_STR %s\n", dfl_dev_str);
 			ret = opae_uio_open(uio, dfl_dev_str);
+			printf("OPENED DFL_DEV_STR\n");
 			if (ret) {
 				res = FPGA_EXCEPTION;
 				OPAE_ERR("Failed to open uio");
@@ -570,7 +591,7 @@ fpga_result get_usrclk_uio(const char *sysfs_path,
 				break;
 			}
 		}
-		break;
+		//break;
 	}
 
 free:
@@ -664,6 +685,7 @@ fpga_result set_userclock(const char *sysfs_path,
 	unsigned int iopll_min_freq        = IOPLL_MIN_FREQ;
 	unsigned int slow_freq             = MIN_FPGA_FREQ;
 
+	printf("ENTER fpga_user_clk.c\n");
 	memset(&uio, 0, sizeof(uio));
 
 	if (sysfs_path == NULL) {
@@ -678,14 +700,20 @@ fpga_result set_userclock(const char *sysfs_path,
 
 	// Agilex user clock DFH revision 1
 	// S10 & A10 user clock DFH revision 0
+	printf("GET_USERCLK_REVISION %s\n", sysfs_path);
 	result = get_userclk_revision(sysfs_path, &revision);
+	//revision=AGILEX_USRCLK_REV;
+	printf("REVISION IS %ld\n", revision);
 	if (result == FPGA_OK && revision == AGILEX_USRCLK_REV) {
+		printf("AGILEX USER CLOCK\n");
 		iopll_max_freq = IOPLL_AGILEX_MAX_FREQ;
 		iopll_min_freq = IOPLL_AGILEX_MIN_FREQ;
 
+		printf("HIGH: %ld LOW: %ld MAX: %d MIN: %d\n", userclk_high, userclk_low, iopll_max_freq, iopll_min_freq);
 		// Enforce 1x clock within valid range
 		if ((userclk_low > iopll_max_freq) ||
 			(userclk_low < iopll_min_freq)) {
+			printf("JASON INVALID FREQ\n");
 			OPAE_ERR("Invalid Input frequency");
 			return FPGA_INVALID_PARAM;
 		}
@@ -714,6 +742,7 @@ fpga_result set_userclock(const char *sysfs_path,
 	ret = using_iopll(sysfs_usrpath, sysfs_path);
 	if (ret == FPGA_OK) {
 
+		printf("OPENING %s\n", sysfs_usrpath);
 		fd = opae_open(sysfs_usrpath, O_WRONLY);
 		if (fd < 0) {
 			OPAE_MSG("open(%s) failed: %s",
@@ -740,6 +769,7 @@ fpga_result set_userclock(const char *sysfs_path,
 		(iopll_config->pll_freq_khz < iopll_min_freq * 1000))
 		return FPGA_EXCEPTION;
 
+	printf("GET USRCLK UIO %s\n", sysfs_path);
 	result = get_usrclk_uio(sysfs_path,
 		USRCLK_FEATURE_ID,
 		&uio,
@@ -825,18 +855,24 @@ fpga_result get_userclk_revision(const char *sysfs_path,
 
 	dfh_csr.csr = 0;
 	// get user clock dfh revision from UIO
+	printf("GET USER CLOCK DFH REVISION FROM UIO %s\n", sysfs_path);
 	result = get_usrclk_uio(sysfs_path,
 		USRCLK_FEATURE_ID,
 		&uio,
 		&uio_ptr);
+	printf("DONE GET_USRCLK_UIO\n");
 	if (result == FPGA_OK) {
+		printf("FPGA_OK\n");
 		dfh_csr.csr = *((volatile uint64_t*)(uio_ptr + 0x0));
+		printf("SETTING REVISION\n");
 		*revision = dfh_csr.feature_rev;
+		printf("REVISION: %ld\n", *revision);
 		opae_uio_close(&uio);
 		return result;
 	}
 
 	// get user clock dfh revision from sysfs
+	printf("GET USER CLOCK DFH REVISION FROM SYSFS\n");
 	if (snprintf(path, SYSFS_PATH_MAX,
 		"%s/%s", sysfs_path, IOPLL_REVISION) < 0) {
 		OPAE_ERR("snprintf buffer overflow");

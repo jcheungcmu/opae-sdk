@@ -421,6 +421,7 @@ int uio_pci_discover(const char *gpattern)
 		}
 
 		pcie_addr = strstr(rlbuf, "/fpga_region/region");
+		//printf("UIO PATH: %s\n", pcie_addr);
 		if (!pcie_addr) {
 			OPAE_ERR("link misformatted");
 			continue;
@@ -878,6 +879,7 @@ fpga_result __UIO_API__ uio_fpgaGetProperties(fpga_token token, fpga_properties 
 	fpga_result result = FPGA_OK;
 	int err;
 
+	printf("uio_fpgaGetProperties\n");
 	ASSERT_NOT_NULL(prop);
 
 	result = fpgaGetProperties(NULL, (fpga_properties *)&_prop);
