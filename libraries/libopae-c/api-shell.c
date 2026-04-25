@@ -420,15 +420,36 @@ opae_get_parent_token(opae_wrapped_token *child)
 		    p = p->next) {
 		
 		parent_hdr = (fpga_token_header *)p->opae_token;
-
+		// printf("**FPGA_IS_PARENT_CHILD CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
 		if (fpga_is_parent_child(parent_hdr, child_hdr)) {
 			
-			//printf("FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
 			parent = p;
 			opae_upref_wrapped_token(parent);
-			
-			if (child_hdr->function == 1 || child_hdr->object_id == 247463936) {
+			// if (child_hdr->function != 0) {
+			// 	printf("FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
+			// }
+			// else 
+			// 	break;
+
+
+			if (child_hdr->function == 1) {
+				// printf("BREAK FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
+
+				if (count == 0) {
+					printf("BREAK FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
+					break;
+				}
+				else {
+					count++;
+					continue;
+				}
+			} 
+			else if (child_hdr->function == 2) {
+
+				// printf("BREAK FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
+
 				if (count == 1) {
+					printf("BREAK FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
 					break;
 				}
 				else {
@@ -436,7 +457,36 @@ opae_get_parent_token(opae_wrapped_token *child)
 					continue;
 				}
 			}
-			break;
+			else if (child_hdr->function == 3) {
+
+				// printf("BREAK FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
+
+				if (count == 2) {
+					printf("BREAK FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
+					break;
+				}
+				else {
+					count++;
+					continue;
+				}
+			}
+			else if (child_hdr->function == 4) {
+				// printf("BREAK FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
+
+				if (count == 3) {
+					printf("BREAK FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
+					break;
+				}
+				else {
+					count++;
+					continue;
+				}
+			}
+			else 
+			{
+				// printf("BREAK FPGA_IS_PARENT_CHILD TRUE CHILD FUNCTION %d OBJ_ID %ld PARENT ID %ld\n", child_hdr->function, child_hdr->object_id, parent_hdr->object_id);
+				break;
+			}
 		}
 	}
 	//printf("DONE LOOP\n");
@@ -1720,6 +1770,11 @@ fpga_result __OPAE_API__ fpgaGetUserClock(fpga_handle handle,
 {
 	opae_wrapped_handle *wrapped_handle =
 		opae_validate_wrapped_handle(handle);
+
+	// struct _fpga_handle  *_handle = (struct _fpga_handle *)handle;
+	// struct _fpga_token  *_token;
+	// _token = (struct _fpga_token *)_handle->token;
+	// printf("_token->sysfspath %s\n", _token->sysfspath);
 
 	ASSERT_NOT_NULL(wrapped_handle);
 	ASSERT_NOT_NULL(low_clk);

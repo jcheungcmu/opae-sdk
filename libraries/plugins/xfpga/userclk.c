@@ -66,6 +66,7 @@ fpga_result __XFPGA_API__ xfpga_fpgaSetUserClock(fpga_handle handle,
 		goto out_unlock;
 	}
 
+	printf("_token->sysfspath %s\n", _token->sysfspath);
 	p = strstr(_token->sysfspath, FPGA_SYSFS_AFU);
 	if (NULL == p) {
 		OPAE_ERR("Invalid sysfspath in token");
@@ -121,21 +122,44 @@ fpga_result __XFPGA_API__ xfpga_fpgaGetUserClock(fpga_handle handle,
 		goto out_unlock;
 	}
 
-	p = strstr(_token->sysfspath, FPGA_SYSFS_AFU);
+	printf("_token->sysfspath %s\n", _token->sysfspath);
+	char *dummypath = "/sys/class/fpga_region/region0/dfl-port.0";
+
+	printf("DUMMYPATH %s\n", dummypath);
+	// p = strstr(_token->sysfspath, FPGA_SYSFS_AFU);
+	// if (NULL == p) {
+	// 	OPAE_ERR("Invalid sysfspath in token");
+	// 	result = FPGA_INVALID_PARAM;
+	// 	goto out_unlock;
+	// }
+
+	// p = strrchr(_token->sysfspath, '.');
+	// if (NULL == p) {
+	// 	OPAE_ERR("Invalid sysfspath in token");
+	// 	result = FPGA_INVALID_PARAM;
+	// 	goto out_unlock;
+	// }
+
+	// result = get_userclock(_token->sysfspath, high_clk, low_clk);
+	// if (result != FPGA_OK) {
+	// 	OPAE_ERR("Failed to get user clock");
+	// }
+
+	p = strstr(dummypath, FPGA_SYSFS_AFU);
 	if (NULL == p) {
 		OPAE_ERR("Invalid sysfspath in token");
 		result = FPGA_INVALID_PARAM;
 		goto out_unlock;
 	}
 
-	p = strrchr(_token->sysfspath, '.');
+	p = strrchr(dummypath, '.');
 	if (NULL == p) {
 		OPAE_ERR("Invalid sysfspath in token");
 		result = FPGA_INVALID_PARAM;
 		goto out_unlock;
 	}
 
-	result = get_userclock(_token->sysfspath, high_clk, low_clk);
+	result = get_userclock(dummypath, high_clk, low_clk);
 	if (result != FPGA_OK) {
 		OPAE_ERR("Failed to get user clock");
 	}

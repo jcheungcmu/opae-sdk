@@ -483,6 +483,8 @@ STATIC fpga_result sync_afu(struct dev_list *afu)
 		return FPGA_EXCEPTION;
 	}
 
+	printf("SYNC_AFU sysfspath %s\n", sysfspath);
+
 	// If we can't read the afu_id, don't return a token.
 	if (sysfs_read_guid(sysfspath, afu->hdr.guid) != FPGA_OK) {
 	// TODO: undo this hack. It was put in place to deal with the lack of
@@ -768,9 +770,14 @@ fpga_result __XFPGA_API__ xfpga_fpgaEnumerate(const fpga_properties *filters,
 			   sync_afu(lptr) != FPGA_OK) {
 			continue;
 		}
+		// printf("Checking lptr sysfspath %s devpath %s\n", lptr->sysfspath, lptr->devpath);
 
 		if (matches_filters(lptr, filters, num_filters)) {
+
+			// printf("MATCHED num_matches %d max_tokens %d sysfspath %s devpath %s\n", *num_matches, max_tokens, lptr->sysfspath, lptr->devpath);
 			if (*num_matches < max_tokens) {
+
+				// printf("NUM_MATCHES < MAX_TOKENS num_matches %d max_tokens %d sysfspath %s devpath %s\n", *num_matches, max_tokens, lptr->sysfspath, lptr->devpath);
 
 				tokens[*num_matches] = token_add(lptr);
 
@@ -789,6 +796,8 @@ fpga_result __XFPGA_API__ xfpga_fpgaEnumerate(const fpga_properties *filters,
 			}
 			++(*num_matches);
 		}
+
+		// printf("ENUMERATE found match num_matches %d max_tokens %d sysfspath %s devpath %s\n", *num_matches, max_tokens, lptr->sysfspath, lptr->devpath);
 	}
 
 out_free_trash:

@@ -464,6 +464,8 @@ STATIC int find_regions(sysfs_fpga_device *device)
 		if (!strcmp(dirent->d_name, ".."))
 			continue;
 
+		// printf("checking device sysfs %s find_regions checking fmt %s inpstr %s type %s num %d\n", device->sysfs_path, SYSFS_FORMAT(sysfs_region_fmt), dirent->d_name, type, num);
+
 		match_res = re_match_region(SYSFS_FORMAT(sysfs_region_fmt),
 					    dirent->d_name, type, sizeof(type),
 					    &num);
@@ -472,21 +474,39 @@ STATIC int find_regions(sysfs_fpga_device *device)
 				     FPGA_SYSFS_FME_LEN)) {
 				region_type = FPGA_DEVICE;
 				region_ptr = &device->fme;
+				// printf("found fme region with name %s type %s num %d\n",  dirent->d_name, type, num);
 			} else if (!strncmp(FPGA_SYSFS_PORT, type,
-					    FPGA_SYSFS_PORT_LEN)) {
+					    FPGA_SYSFS_PORT_LEN) && 
+
+							((num == 0) || (num == 5) || (num == 10) || (num == 15))
+						
+						
+						) {
 				region_type = FPGA_ACCELERATOR;
 				region_ptr = &device->port;
+				// printf("found port region with name %s type %s num %d\n",  dirent->d_name, type, num);
+			}
+			else {
+				// printf("not port or fme\n");
 			}
 
-			if (region_ptr)
+			if (region_ptr) {
+
+				// printf("find_regions match found, making region with name %s type %s num %d\n",  dirent->d_name, type, num);
+
 				*region_ptr = make_region(device,
 				dirent->d_name, num, region_type);
+			}
 
 			region_ptr = NULL;
 
 		} else if (match_res != FPGA_NOT_FOUND) {
+			// printf("FPGA NOT FOUND\n");
 			res = match_res;
 			break;
+		}
+		else {
+			// printf("No matches\n");
 		}
 	}
 
@@ -2074,7 +2094,7 @@ fpga_result opae_glob_path(char *path, size_t len)
 	size_t glob_len;
 	if (!globres) {
 		if (pglob.gl_pathc > 1) {
-		//	printf("FOUND MORE THAN ONE OPAE GLOB PATH %s\n", path);
+			// printf("FOUND MORE THAN ONE OPAE GLOB PATH %s\n", path);
 			OPAE_MSG("Ambiguous object key - using first one");
 		}
 		glob_len = strnlen(pglob.gl_pathv[0], len-1);
